@@ -12,7 +12,6 @@
  *      compression (see scripts/kallsyms.c for a more complete description)
  */
 #include <linux/kallsyms.h>
-#include <linux/module.h>
 #include <linux/init.h>
 #include <linux/seq_file.h>
 #include <linux/fs.h>
@@ -20,7 +19,6 @@
 #include <linux/err.h>
 #include <linux/proc_fs.h>
 #include <linux/sched.h>	/* for cond_resched */
-#include <linux/mm.h>
 #include <linux/ctype.h>
 #include <linux/slab.h>
 #include <linux/filter.h>
@@ -28,8 +26,6 @@
 #if defined(CONFIG_SEC_DEBUG)
 #include <linux/sec_debug.h>
 #endif
-
-#include <asm/sections.h>
 
 #ifdef CONFIG_KALLSYMS_ALL
 #define all_var 1
@@ -91,37 +87,6 @@ void sec_debug_set_kallsyms_info(struct sec_debug_ksyms *ksyms, int magic)
 	ksyms->kimage_voffset = kimage_voffset;
 }
 #endif
-
-static inline int is_kernel_inittext(unsigned long addr)
-{
-	if (addr >= (unsigned long)_sinittext
-	    && addr <= (unsigned long)_einittext)
-		return 1;
-	return 0;
-}
-
-static inline int is_kernel_text(unsigned long addr)
-{
-	if ((addr >= (unsigned long)_stext && addr <= (unsigned long)_etext) ||
-	    arch_is_kernel_text(addr))
-		return 1;
-	return in_gate_area_no_mm(addr);
-}
-
-static inline int is_kernel(unsigned long addr)
-{
-	if (addr >= (unsigned long)_stext && addr <= (unsigned long)_end)
-		return 1;
-	return in_gate_area_no_mm(addr);
-}
-
-static int is_ksym_addr(unsigned long addr)
-{
-	if (IS_ENABLED(CONFIG_KALLSYMS_ALL))
-		return is_kernel(addr);
-
-	return is_kernel_text(addr) || is_kernel_inittext(addr);
-}
 
 /*
  * Expand a compressed symbol data into the resulting uncompressed string,
