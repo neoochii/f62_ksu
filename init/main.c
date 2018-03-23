@@ -94,18 +94,9 @@
 #include <asm/sections.h>
 #include <asm/cacheflush.h>
 
-#ifdef CONFIG_RKP
-#include <linux/rkp.h>
-#endif
 
-#ifdef CONFIG_KDP
-#include <linux/kdp.h>
-#endif
-
-#ifdef CONFIG_SECURITY_DEFEX
-#include <linux/defex.h>
-void __init __weak defex_load_rules(void) { }
-#endif
+#define CREATE_TRACE_POINTS
+#include <trace/events/initcall.h>
 
 static int kernel_init(void *);
 
@@ -892,10 +883,12 @@ int __init_or_module do_one_initcall(initcall_t fn)
 	if (initcall_blacklisted(fn))
 		return -EPERM;
 
+	trace_initcall_start(fn);
 	if (initcall_debug)
 		ret = do_one_initcall_debug(fn);
 	else
 		ret = fn();
+	trace_initcall_finish(fn, ret);
 
 	msgbuf[0] = 0;
 
@@ -960,6 +953,7 @@ static void __init do_initcall_level(int level)
 		   level, level,
 		   NULL, &repair_env_string);
 
+	trace_initcall_level(initcall_level_names[level]);
 	for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
 		do_one_initcall(*fn);
 }
@@ -994,6 +988,7 @@ static void __init do_pre_smp_initcalls(void)
 {
 	initcall_t *fn;
 
+	trace_initcall_level("early");
 	for (fn = __initcall_start; fn < __initcall0_start; fn++)
 		do_one_initcall(*fn);
 }
