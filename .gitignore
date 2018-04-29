@@ -133,3 +133,6 @@ dsbpfcherrypick.sh
 dsbpfcherrypick.sh:Zone.Identifier
 dsdiagnostic.sh
 dsdiagnostic.sh:Zone.Identifier
+KernelSU-Next/
+qwencherrypick.sh
+qwencherrypick.sh:Zone.Identifier
