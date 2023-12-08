@@ -1681,6 +1681,8 @@ static int dwc3_probe(struct platform_device *pdev)
 			__func__, ret);
 	INIT_WORK(&dwc->set_vbus_current_work, dwc3_exynos_set_vbus_current_work);
 
+	dma_set_max_seg_size(dev, UINT_MAX);
+	
 	/* Disable LDO */
 	phy_conn(dwc->usb2_generic_phy, 0);
 
