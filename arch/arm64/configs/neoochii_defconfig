@@ -2,6 +2,15 @@
 # Automatically generated file; DO NOT EDIT.
 # Linux/arm64 4.14.356-openela-rc1 Kernel Configuration
 #
+
+#KernelSU
+CONFIG_KSU=y
+
+#Susfs
+CONFIG_KSU_SUSFS=y
+
+
+CONFIG_SCHED_CASS=y
 CONFIG_ARM64=y
 CONFIG_64BIT=y
 CONFIG_ARCH_PHYS_ADDR_T_64BIT=y
