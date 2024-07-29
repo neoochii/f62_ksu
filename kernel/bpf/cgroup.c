@@ -139,7 +139,7 @@ static int compute_effective_progs(struct cgroup *cgrp,
 		}
 	} while ((p = cgroup_parent(p)));
 
-	*array = progs;
+	rcu_assign_pointer(*array, progs);
 	return 0;
 }
 
