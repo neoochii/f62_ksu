@@ -112,7 +112,19 @@ BPF_CALL_0(bpf_ktime_get_ns)
 
 const struct bpf_func_proto bpf_ktime_get_ns_proto = {
 	.func		= bpf_ktime_get_ns,
-	.gpl_only	= true,
+	.gpl_only	= false,
+	.ret_type	= RET_INTEGER,
+};
+
+BPF_CALL_0(bpf_ktime_get_boot_ns)
+{
+	/* NMI safe access to clock boottime */
+	return ktime_get_boot_fast_ns();
+}
+
+const struct bpf_func_proto bpf_ktime_get_boot_ns_proto = {
+	.func		= bpf_ktime_get_boot_ns,
+	.gpl_only	= false,
 	.ret_type	= RET_INTEGER,
 };
 
@@ -206,8 +218,9 @@ static inline void __bpf_spin_lock(struct bpf_spin_lock *lock)
 	atomic_t *l = (void *)lock;
 	BUILD_BUG_ON(sizeof(*l) != sizeof(*lock));
 	do {
-		atomic_cond_read_relaxed(l, !VAL);
+    while (atomic_read(l)) cpu_relax();
 	} while (atomic_xchg(l, 1));
+
 }
 
 static inline void __bpf_spin_unlock(struct bpf_spin_lock *lock)
