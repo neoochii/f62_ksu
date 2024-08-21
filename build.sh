@@ -1,4 +1,4 @@
-make clean && make mrproper
+
 #!/bin/bash
 RDIR="$(pwd)"
 
@@ -6,7 +6,7 @@ export PLATFORM_VERSION=13
 export ARCH=arm64
 export ANDROID_MAJOR_VERSION=t
 MODEL="GalaxyF62"
-BUILD_KERNEL_VERSION="V3"
+BUILD_KERNEL_VERSION="V4"
 
 # Check for -d flag
 DEBUG_BUILD=false

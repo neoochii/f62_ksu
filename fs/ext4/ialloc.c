@@ -350,7 +350,6 @@ out:
 		if (!fatal)
 			fatal = err;
 	} else {
-		print_bh(sb, bitmap_bh, 0, EXT4_BLOCK_SIZE(sb));
 		ext4_error(sb, "bit already cleared for inode %lu", ino);
 		if (gdp && !EXT4_MB_GRP_IBITMAP_CORRUPT(grp)) {
 			int count;
@@ -464,10 +463,7 @@ static int find_group_orlov(struct super_block *sb, struct inode *parent,
 		int ret = -1;
 
 		if (qstr) {
-			if (ext4_hash_in_dirent(parent))
-				hinfo.hash_version = DX_HASH_SIPHASH;
-			else
-				hinfo.hash_version = DX_HASH_HALF_MD4;
+			hinfo.hash_version = DX_HASH_HALF_MD4;
 			hinfo.seed = sbi->s_hash_seed;
 			ext4fs_dirhash(parent, qstr->name, qstr->len, &hinfo);
 			grp = hinfo.hash;
