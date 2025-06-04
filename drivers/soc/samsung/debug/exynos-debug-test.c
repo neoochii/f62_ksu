@@ -766,7 +766,7 @@ static void simulate_UNALIGNED(char *arg)
 	u32 *p;
 	u32 val = 0x12345678;
 
-	pr_crit("DEBUG TEST: %s()\n", __func__);
+	pr_crit("DEBUG TEST: %s()\n", __func__);s
 
 	p = (u32 *)(data + 1);
 	pr_crit("DEBUG TEST: data=[0x%llx] p=[0x%llx]\n",
@@ -785,10 +785,11 @@ static void simulate_WRITE_RO(char *arg)
 
 #ifdef CONFIG_RKP_CFP_JOPP
 	ptr = (unsigned long *)__start_rodata;
+	*ptr ^= 0x12345678;
 #else
 	ptr = (unsigned long *)simulate_WRITE_RO;
 #endif
-	*ptr ^= 0x12345678;
+	*ptr ^= 0x0;
 }
 
 #define BUFFER_SIZE SZ_1K
