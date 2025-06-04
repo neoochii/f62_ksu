@@ -4,14 +4,14 @@
 
 git clone aarch64-linux-android-4.9.git
 
-git clone /E625-T-u4.git
+git clone /f62_ksu.git
 
-cd E625-T-u4
+cd f62_ksu
 
 sudo -s
 
 
 sudo -s 
 
-./build_kernel.sh
+./build.sh
 
