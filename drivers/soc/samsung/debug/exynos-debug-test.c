@@ -766,7 +766,7 @@ static void simulate_UNALIGNED(char *arg)
 	u32 *p;
 	u32 val = 0x12345678;
 
-	pr_crit("DEBUG TEST: %s()\n", __func__);s
+	pr_crit("DEBUG TEST: %s()\n", __func__);
 
 	p = (u32 *)(data + 1);
 	pr_crit("DEBUG TEST: data=[0x%llx] p=[0x%llx]\n",
