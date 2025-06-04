@@ -1,5 +1,4 @@
 make clean && make mrproper
-@@ -1,5 +1,6 @@
 #!/bin/bash
 RDIR="$(pwd)"
 
