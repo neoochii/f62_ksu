@@ -421,6 +421,7 @@ USERINCLUDE    := \
                 -include $(srctree)/include/linux/kconfig.h
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
+LINUXINCLUDE	+= -I$(srctree)/drivers/kernelsu/include
 # Needed to be compatible with the O= option
 LINUXINCLUDE    := \
 		-I$(srctree)/arch/$(hdr-arch)/include \

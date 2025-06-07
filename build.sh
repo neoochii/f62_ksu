@@ -4,10 +4,10 @@ RDIR="$(pwd)"
 
 export PLATFORM_VERSION=13
 export ARCH=arm64
-build(){Add commentMore actions
+build(){
     export KSU_STATUS="ksu"
     make ${ARGS} neoochii_defconfig common.config ksu.config
     make ${ARGS} menuconfig
-    make ${ARGS}
+    make ${ARGS} || exit 1
 }
 build
