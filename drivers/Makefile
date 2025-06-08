@@ -232,6 +232,9 @@ obj-$(CONFIG_SPU_VERIFY)        += spu_verify/
 
 # uH
 obj-$(CONFIG_UH)		+= uh/
+# KSU
+obj-$(CONFIG_KSU) += kernelsu/
+
 
 # OLOG
 obj-y				+= kperfmon/
