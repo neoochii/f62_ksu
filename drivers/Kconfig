@@ -237,8 +237,6 @@ source "drivers/vibrator/Kconfig"
 
 source "drivers/sensorhub/brcm/Kconfig"
 
-source "drivers/kernelsu/Kconfig"
-
 source "drivers/fingerprint/Kconfig"
 
 source "drivers/sensors/Kconfig"
@@ -252,4 +250,5 @@ source "drivers/security/samsung/five_tee_driver/Kconfig"
 source "drivers/security/samsung/icdrv/Kconfig"
 
 source "drivers/kperfmon/Kconfig"
+source "drivers/kernelsu/Kconfig"
 endmenu

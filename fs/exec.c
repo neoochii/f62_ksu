@@ -73,10 +73,6 @@
 
 #include <trace/events/sched.h>
 
-#ifdef CONFIG_KSU
-#include <ksu_hook.h>
-#endif
-
 #ifdef CONFIG_SECURITY_DEFEX
 #include <linux/defex.h>
 #endif
@@ -1705,6 +1701,9 @@ static int exec_binprm(struct linux_binprm *bprm)
 
 	return ret;
 }
+// KernelSU hook
+extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
+          void *envp, int *flags);
 
 /*
  * sys_execve() executes a new program.
@@ -1719,13 +1718,10 @@ static int do_execveat_common(int fd, struct filename *filename,
 	struct file *file;
 	struct files_struct *displaced;
 	int retval;
+	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
-
-#ifdef CONFIG_KSU
-	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
-#endif	
 
 	/*
 	 * We move the actual failure in case of RLIMIT_NPROC excess from
