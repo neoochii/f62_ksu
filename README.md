@@ -13,5 +13,7 @@ sudo -s
 
 sudo -s 
 
-./build.sh
+./build.sh //for enforcing 
+
+./build.sh  -d //for permissive 
 
