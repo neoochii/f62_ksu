@@ -23,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 #init ksu next
-git submodule init && git submodule update
+curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
 # Install requirements
 if [ ! -f ".requirements" ]; then
     sudo apt update && sudo apt install -y git device-tree-compiler lz4 xz-utils zlib1g-dev openjdk-17-jdk gcc g++ python3 python-is-python3 p7zip-full android-sdk-libsparse-utils erofs-utils \
