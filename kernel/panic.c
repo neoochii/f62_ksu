@@ -198,6 +198,13 @@ void panic(const char *fmt, ...)
 	int old_cpu, this_cpu;
 	bool _crash_kexec_post_notifiers = crash_kexec_post_notifiers;
 	
+#ifdef CONFIG_SEC_DEBUG_EXTRA_INFO
+	struct pt_regs regs;
+
+	regs.regs[30] = _RET_IP_;
+	regs.pc = regs.regs[30] - sizeof(unsigned int);
+#endif
+
 		if (panic_on_warn) {
 		/*
 		 * This thread may hit another WARN() in the panic path.
@@ -208,13 +215,6 @@ void panic(const char *fmt, ...)
 		panic_on_warn = 0;
 	}
 	
-#ifdef CONFIG_SEC_DEBUG_EXTRA_INFO
-	struct pt_regs regs;
-
-	regs.regs[30] = _RET_IP_;
-	regs.pc = regs.regs[30] - sizeof(unsigned int);
-#endif
-
 	/*
 	 * dbg_snapshot_early_panic is for supporting wapper functions
 	 * to users need to run SoC specific function in NOT interrupt
