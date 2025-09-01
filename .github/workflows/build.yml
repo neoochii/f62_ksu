@@ -13,7 +13,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          submodules: true   # fetch submodules if your kernel repo uses them
+          submodules: true
 
       - name: Set up environment
         run: |
@@ -29,9 +29,20 @@ jobs:
           chmod +x ./build.sh
           ./build.sh
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: kernel-build-${{ github.sha }}
-          path: build/**   # Upload everything inside the build/ folder
+          tag_name: ${{ github.sha }}   # Release is tagged with commit SHA
+          name: "Kernel Build - ${{ github.sha }}"
+          body: |
+            Automated kernel build from branch **fifteen**
+            Commit: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload build folder files to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
