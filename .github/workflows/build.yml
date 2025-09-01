@@ -3,7 +3,10 @@ name: Kernel Build (Fifteen Branch)
 on:
   push:
     branches:
-      - 15   # Only run workflow on the fifteen branch
+      - 15
+
+permissions:
+  contents: write   # ✅ Needed to create releases with GITHUB_TOKEN
 
 jobs:
   build:
@@ -32,7 +35,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.sha }}   # Release is tagged with commit SHA
+          tag_name: ${{ github.sha }}   # Release tagged with commit SHA
           name: "Kernel Build - ${{ github.sha }}"
           body: |
             Automated kernel build from branch **fifteen**
