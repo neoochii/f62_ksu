@@ -385,11 +385,6 @@ static inline void netdev_set_addr_lockdep_class(struct net_device *dev)
 
 static inline struct list_head *ptype_head(const struct packet_type *pt)
 {
-	struct list_head *ret = dropdump_ptype_head(pt);
-
-	if (unlikely(ret))
-		return ret;
-
 	if (pt->type == htons(ETH_P_ALL))
 		return pt->dev ? &pt->dev->ptype_all : &ptype_all;
 	else
@@ -3939,7 +3934,6 @@ drop:
 
 	atomic_long_inc(&skb->dev->rx_dropped);
 
-	DROPDUMP_QPCAP_SKB(skb, NET_DROPDUMP_OPT_CORE_BACKLOGFAIL);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
@@ -4115,9 +4109,6 @@ static int netif_rx_internal(struct sk_buff *skb)
 
 	trace_netif_rx(skb);
 
-#ifdef CONFIG_NET_SUPPORT_DROPDUMP
-	skb->dropmask = PACKET_IN;
-#endif
 	if (static_key_false(&generic_xdp_needed)) {
 		int ret;
 
@@ -4567,7 +4558,6 @@ drop:
 		else
 			atomic_long_inc(&skb->dev->rx_nohandler);
 
-		DROPDUMP_QPCAP_SKB(skb, NET_DROPDUMP_OPT_CORE_BACKLOGFAIL1);
 		kfree_skb(skb);
 		/* Jamal, now you will not able to escape explaining
 		 * me how you were going to use this. :-)
@@ -4648,9 +4638,6 @@ static int netif_receive_skb_internal(struct sk_buff *skb)
 
 	net_timestamp_check(netdev_tstamp_prequeue, skb);
 
-#ifdef CONFIG_NET_SUPPORT_DROPDUMP
-	skb->dropmask = PACKET_IN;
-#endif
 	if (skb_defer_rx_timestamp(skb))
 		return NET_RX_SUCCESS;
 

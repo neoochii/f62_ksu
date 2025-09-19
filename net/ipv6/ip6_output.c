@@ -88,7 +88,6 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
 			if (ipv6_hdr(skb)->hop_limit == 0) {
 				IP6_INC_STATS(net, idev,
 					      IPSTATS_MIB_OUTDISCARDS);
-				DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_OUTDISCARDS2);
 				kfree_skb(skb);
 				return 0;
 			}
@@ -125,7 +124,6 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
 	rcu_read_unlock_bh();
 
 	IP6_INC_STATS(net, ip6_dst_idev(dst), IPSTATS_MIB_OUTNOROUTES);
-	DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_OUTNOROUTES);
 	kfree_skb(skb);
 	return -EINVAL;
 }
@@ -210,7 +208,6 @@ int ip6_output(struct net *net, struct sock *sk, struct sk_buff *skb)
 
 	if (unlikely(idev->cnf.disable_ipv6)) {
 		IP6_INC_STATS(net, idev, IPSTATS_MIB_OUTDISCARDS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_OUTDISCARDS3);
 		kfree_skb(skb);
 		return 0;
 	}
@@ -331,7 +328,6 @@ int ip6_xmit(const struct sock *sk, struct sk_buff *skb, struct flowi6 *fl6,
 	ipv6_local_error((struct sock *)sk, EMSGSIZE, fl6, mtu);
 
 	IP6_INC_STATS(net, ip6_dst_idev(skb_dst(skb)), IPSTATS_MIB_FRAGFAILS);
-	DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_FRAGFAILS);
 	kfree_skb(skb);
 	return -EMSGSIZE;
 }
@@ -491,7 +487,6 @@ int ip6_forward(struct sk_buff *skb)
 	if (!xfrm6_policy_check(NULL, XFRM_POLICY_FWD, skb)) {
 		__IP6_INC_STATS(net, ip6_dst_idev(dst),
 				IPSTATS_MIB_INDISCARDS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_INDISCARDS3);
 		goto drop;
 	}
 
@@ -524,7 +519,6 @@ int ip6_forward(struct sk_buff *skb)
 		icmpv6_send(skb, ICMPV6_TIME_EXCEED, ICMPV6_EXC_HOPLIMIT, 0);
 		__IP6_INC_STATS(net, ip6_dst_idev(dst),
 				IPSTATS_MIB_INHDRERRORS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_INHDRERRORS13);
 		kfree_skb(skb);
 		return -ETIMEDOUT;
 	}
@@ -538,7 +532,6 @@ int ip6_forward(struct sk_buff *skb)
 		else if (proxied < 0) {
 			__IP6_INC_STATS(net, ip6_dst_idev(dst),
 					IPSTATS_MIB_INDISCARDS);
-			DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_INDISCARDS4);
 			goto drop;
 		}
 	}
@@ -546,7 +539,6 @@ int ip6_forward(struct sk_buff *skb)
 	if (!xfrm6_route_forward(skb)) {
 		__IP6_INC_STATS(net, ip6_dst_idev(dst),
 				IPSTATS_MIB_INDISCARDS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_INDISCARDS5);
 		goto drop;
 	}
 	dst = skb_dst(skb);
@@ -605,10 +597,8 @@ int ip6_forward(struct sk_buff *skb)
 		icmpv6_send(skb, ICMPV6_PKT_TOOBIG, 0, mtu);
 		__IP6_INC_STATS(net, ip6_dst_idev(dst),
 				IPSTATS_MIB_INTOOBIGERRORS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_INTOOBIGERRORS);
 		__IP6_INC_STATS(net, ip6_dst_idev(dst),
 				IPSTATS_MIB_FRAGFAILS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_FRAGFAILS1);
 		kfree_skb(skb);
 		return -EMSGSIZE;
 	}
@@ -616,7 +606,6 @@ int ip6_forward(struct sk_buff *skb)
 	if (skb_cow(skb, dst->dev->hard_header_len)) {
 		__IP6_INC_STATS(net, ip6_dst_idev(dst),
 				IPSTATS_MIB_OUTDISCARDS);
-		DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_OUTDISCARDS5);
 		goto drop;
 	}
 
@@ -632,7 +621,6 @@ int ip6_forward(struct sk_buff *skb)
 
 error:
 	__IP6_INC_STATS(net, ip6_dst_idev(dst), IPSTATS_MIB_INADDRERRORS);
-	DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_INADDRERRORS5);
 drop:
 	kfree_skb(skb);
 	return -EINVAL;
@@ -823,8 +811,6 @@ int ip6_fragment(struct net *net, struct sock *sk, struct sk_buff *skb,
 			return 0;
 		}
 
-		DROPDUMP_QUEUE_SKB(frag, NET_DROPDUMP_IPSTATS_MIB_FRAGFAILS2);
-
 		kfree_skb_list(frag);
 
 		IP6_INC_STATS(net, ip6_dst_idev(&rt->dst),
@@ -952,7 +938,6 @@ fail_toobig:
 fail:
 	IP6_INC_STATS(net, ip6_dst_idev(skb_dst(skb)),
 		      IPSTATS_MIB_FRAGFAILS);
-	DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_FRAGFAILS3);
 	kfree_skb(skb);
 	return err;
 }
@@ -1791,11 +1776,9 @@ static void __ip6_flush_pending_frames(struct sock *sk,
 	struct sk_buff *skb;
 
 	while ((skb = __skb_dequeue_tail(queue)) != NULL) {
-		if (skb_dst(skb)) {
+		if (skb_dst(skb))
 			IP6_INC_STATS(sock_net(sk), ip6_dst_idev(skb_dst(skb)),
 				      IPSTATS_MIB_OUTDISCARDS);
-			DROPDUMP_QUEUE_SKB(skb, NET_DROPDUMP_IPSTATS_MIB_OUTDISCARDS6);
-		}
 		kfree_skb(skb);
 	}
 
