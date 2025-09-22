@@ -6,7 +6,7 @@ export PLATFORM_VERSION=13
 export ARCH=arm64
 export ANDROID_MAJOR_VERSION=t
 MODEL="GalaxyF62"
-BUILD_KERNEL_VERSION="V5.2"
+BUILD_KERNEL_VERSION="V5.8"
 
 # Check for -d flag
 DEBUG_BUILD=false
@@ -23,7 +23,8 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 #init ksu next
-curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
+curl -LSs "https://raw.githubusercontent.com/GoRhanHee/KernelSU-Next/next-susfs-experimental/kernel/setup.sh" | bash - 
+
 # Install requirements
 if [ ! -f ".requirements" ]; then
     sudo apt update && sudo apt install -y git device-tree-compiler lz4 xz-utils zlib1g-dev openjdk-17-jdk gcc g++ python3 python-is-python3 p7zip-full android-sdk-libsparse-utils erofs-utils \
@@ -87,7 +88,6 @@ build() {
         make ${ARGS} neoochii_defconfig common.config ksu.config
     fi
     
-    make ${ARGS} menuconfig || true
     make ${ARGS} || exit 1
 }
 
