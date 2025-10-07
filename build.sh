@@ -23,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 #init ksu next
-curl -LSs "https://raw.githubusercontent.com/GoRhanHee/KernelSU-Next/next-susfs-experimental/kernel/setup.sh" | bash - 
+curl -LSs "https://raw.githubusercontent.com/GoRhanHee/KernelSU-Next/next-susfs/kernel/setup.sh" | bash - 
 
 # Install requirements
 if [ ! -f ".requirements" ]; then
