@@ -82,6 +82,8 @@ enum {
 	 * Enable cpuset controller in v1 cgroup to use v2 behavior.
 	 */
 	CGRP_ROOT_CPUSET_V2_MODE = (1 << 4),
+	CGRP_FREEZE = (1 << 5),
+	CGRP_FROZEN = (1 << 6),
 };
 
 /* cftype->flags */
