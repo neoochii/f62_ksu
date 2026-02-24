@@ -185,9 +185,9 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 		enforcing_set(state, new_value);
 		if (new_value)
 			avc_ss_reset(state->avc, 0);
-		selnl_notify_setenforce(selinux_enforcing);
-		selinux_status_update_setenforce(state, selinux_enforcing);
-		if (!selinux_enforcing)
+		selnl_notify_setenforce(new_value);
+		selinux_status_update_setenforce(state, new_value);
+		if (!new_value)
 			call_lsm_notifier(LSM_POLICY_CHANGE, NULL);
 	}
 #endif
@@ -2151,6 +2151,7 @@ __initcall(init_sel_fs);
 void exit_sel_fs(void)
 {
 	sysfs_remove_mount_point(fs_kobj, "selinux");
+	dput(selinux_null.dentry);
 	kern_unmount(selinuxfs_mount);
 	unregister_filesystem(&sel_fs_type);
 }

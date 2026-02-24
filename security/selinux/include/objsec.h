@@ -39,7 +39,7 @@ struct task_security_struct {
 	u32 keycreate_sid;	/* keycreate SID */
 	u32 sockcreate_sid;	/* fscreate SID */
 
-}
+};
 
 enum label_initialized {
 	LABEL_INVALID,		/* invalid or not initialized */

@@ -32,6 +32,8 @@
 #include <linux/string.h>
 #include <linux/msg.h>
 #include <net/flow.h>
+#include <linux/task_integrity.h>
+
 
 #define MAX_LSM_EVM_XATTR	2
 

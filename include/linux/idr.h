@@ -1,6 +1,6 @@
 /*
  * include/linux/idr.h
- * 
+ *
  * 2002-10-18  written by Jim Houston jim.houston@ccur.com
  *	Copyright (C) 2002 by Concurrent Computer Corporation
  *	Distributed under the GNU GPL license version 2.
@@ -30,11 +30,11 @@ struct idr {
 /* Set the IDR flag and the IDR_FREE tag */
 #define IDR_RT_MARKER		((__force gfp_t)(3 << __GFP_BITS_SHIFT))
 
-#define IDR_INIT							\
+#define IDR_INIT(name)							\
 {									\
-	.idr_rt = RADIX_TREE_INIT(IDR_RT_MARKER)			\
+	.idr_rt = RADIX_TREE_INIT(name, IDR_RT_MARKER)			\
 }
-#define DEFINE_IDR(name)	struct idr name = IDR_INIT
+#define DEFINE_IDR(name)	struct idr name = IDR_INIT(name)
 
 /**
  * idr_get_cursor - Return the current position of the cyclic allocator
@@ -130,6 +130,8 @@ static inline int idr_alloc_ext(struct idr *idr, void *ptr,
 	return idr_alloc_cmn(idr, ptr, index, start, end, gfp, true);
 }
 
+int __must_check idr_alloc_u32(struct idr *, void *ptr, u32 *nextid,
+				unsigned long max, gfp_t);
 int idr_alloc_cyclic(struct idr *, void *entry, int start, int end, gfp_t);
 int idr_for_each(const struct idr *,
 		 int (*fn)(int id, void *p, void *data), void *data);
@@ -241,10 +243,10 @@ struct ida {
 	struct radix_tree_root	ida_rt;
 };
 
-#define IDA_INIT	{						\
-	.ida_rt = RADIX_TREE_INIT(IDR_RT_MARKER | GFP_NOWAIT),		\
+#define IDA_INIT(name)	{						\
+	.ida_rt = RADIX_TREE_INIT(name, IDR_RT_MARKER | GFP_NOWAIT),	\
 }
-#define DEFINE_IDA(name)	struct ida name = IDA_INIT
+#define DEFINE_IDA(name)	struct ida name = IDA_INIT(name)
 
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask);
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id);
@@ -310,7 +312,7 @@ static inline void ida_init(struct ida *ida)
 }
 
 #define ida_simple_get(ida, start, end, gfp)	\
-			ida_alloc_range(ida, start, (end) - 1, gfp)
+ida_alloc_range(ida, start, (end) - 1, gfp)
 #define ida_simple_remove(ida, id)	ida_free(ida, id)
 
 /**

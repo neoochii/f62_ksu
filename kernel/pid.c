@@ -42,6 +42,8 @@
 #include <linux/sched/signal.h>
 #include <linux/sched/task.h>
 #include <linux/idr.h>
+#include <linux/xarray.h>
+
 
 #define pid_hashfn(nr, ns)	\
 	hash_long((unsigned long)nr + (unsigned long)ns, pidhash_shift)
@@ -71,9 +73,9 @@ struct pid_namespace init_pid_ns = {
 	.child_reaper = &init_task,
 	.user_ns = &init_user_ns,
 	.ns.inum = PROC_PID_INIT_INO,
-#ifdef CONFIG_PID_NS
+	#ifdef CONFIG_PID_NS
 	.ns.ops = &pidns_operations,
-#endif
+	#endif
 };
 EXPORT_SYMBOL_GPL(init_pid_ns);
 

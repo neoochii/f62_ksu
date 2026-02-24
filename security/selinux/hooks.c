@@ -88,9 +88,6 @@
 #include <linux/kernfs.h>
 #include <linux/stringhash.h>	/* for hashlen_string() */
 
-// [ SEC_SELINUX_PORTING_COMMON
-#include <linux/delay.h>
-// ] SEC_SELINUX_PORTING_COMMON
 
 #include "avc.h"
 #include "objsec.h"
@@ -108,9 +105,7 @@ struct selinux_state selinux_state;
 /* SECMARK reference count */
 static atomic_t selinux_secmark_refcount = ATOMIC_INIT(0);
 
-// [ SEC_SELINUX_PORTING_COMMON
-static DEFINE_MUTEX(selinux_sdcardfs_lock);
-// ] SEC_SELINUX_PORTING_COMMON
+
 
 #ifdef CONFIG_SECURITY_SELINUX_DEVELOP
 static int selinux_enforcing_boot __initdata;
@@ -118,19 +113,9 @@ static int selinux_enforcing_boot __initdata;
 static int __init enforcing_setup(char *str)
 {
 	unsigned long enforcing;
-	if (!kstrtoul(str, 0, &enforcing)){
-// [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-		selinux_enforcing_boot = 1;
-		selinux_enforcing = 1;
-#else
+	if (!kstrtoul(str, 0, &enforcing))
 		selinux_enforcing_boot = enforcing ? 1 : 0;
-		selinux_enforcing = enforcing ? 1 : 0;
-#endif
-// ] SEC_SELINUX_PORTING_COMMON	
-	}
 	return 1;
-	
 }
 __setup("enforcing=", enforcing_setup);
 #else
@@ -2915,15 +2900,12 @@ out_err:
 		return 0;
 	
 	// [ SEC_SELINUX_PORTING_COMMON
-	if((strcmp(sb->s_type->name,"sdcardfs")) == 0)
-		mutex_lock(&selinux_sdcardfs_lock);
 
 	ad.type = LSM_AUDIT_DATA_DENTRY;
 	ad.u.dentry = sb->s_root;
 	rc = superblock_has_perm(cred, sb, FILESYSTEM__MOUNT, &ad);
 
-	if((strcmp(sb->s_type->name,"sdcardfs")) == 0)
-		mutex_unlock(&selinux_sdcardfs_lock);
+
 	// ] SEC_SELINUX_PORTING_COMMON
 	
 	return rc;

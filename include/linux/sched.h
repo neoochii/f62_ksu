@@ -1348,7 +1348,7 @@ struct task_struct {
 	u64 susfs_task_state;
 	u64 susfs_last_fake_mnt_id;
 #endif
-    bool frozen;
+
 	randomized_struct_fields_end
 
 	/* CPU-specific state of this task: */
