@@ -95,7 +95,6 @@
 #include <asm/cacheflush.h>
 
 
-
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
 
@@ -189,7 +188,7 @@ static bool __init obsolete_checksetup(char *line)
 					had_early_param = true;
 			} else if (!p->setup_func) {
 				pr_warn("Parameter %s is obsolete, ignored\n",
-					p->str);
+						p->str);
 				had_early_param = true;
 				goto fail;
 			} else {
@@ -203,7 +202,7 @@ static bool __init obsolete_checksetup(char *line)
 		p++;
 	} while (p < __setup_end);
 
-fail:
+	fail:
 	unset_memsize_reserved_name();
 	return had_early_param;
 }
@@ -251,7 +250,7 @@ early_param("loglevel", loglevel);
 
 /* Change NUL term back to "=", to make "param" the whole string. */
 static int __init repair_env_string(char *param, char *val,
-				    const char *unused, void *arg)
+									const char *unused, void *arg)
 {
 	if (val) {
 		/* param=val or param="val"? */
@@ -269,7 +268,7 @@ static int __init repair_env_string(char *param, char *val,
 
 /* Anything after -- gets handed straight to init. */
 static int __init set_init_arg(char *param, char *val,
-			       const char *unused, void *arg)
+							   const char *unused, void *arg)
 {
 	unsigned int i;
 
@@ -294,7 +293,7 @@ static int __init set_init_arg(char *param, char *val,
  * unused parameters (modprobe will find them in /proc/cmdline).
  */
 static int __init unknown_bootoption(char *param, char *val,
-				     const char *unused, void *arg)
+									 const char *unused, void *arg)
 {
 	repair_env_string(param, val, unused, NULL);
 
@@ -379,9 +378,9 @@ static inline void smp_prepare_cpus(unsigned int maxcpus) { }
 static void __init setup_command_line(char *command_line)
 {
 	saved_command_line =
-		memblock_virt_alloc(strlen(boot_command_line) + 1, 0);
+	memblock_virt_alloc(strlen(boot_command_line) + 1, 0);
 	initcall_command_line =
-		memblock_virt_alloc(strlen(boot_command_line) + 1, 0);
+	memblock_virt_alloc(strlen(boot_command_line) + 1, 0);
 	static_command_line = memblock_virt_alloc(strlen(command_line) + 1, 0);
 	strcpy(saved_command_line, boot_command_line);
 	strcpy(static_command_line, command_line);
@@ -452,14 +451,14 @@ int __is_kdp_recovery __kdp_ro = 0;
 
 /* Check for early params. */
 static int __init do_early_param(char *param, char *val,
-				 const char *unused, void *arg)
+								 const char *unused, void *arg)
 {
 	const struct obs_kernel_param *p;
 
 	for (p = __setup_start; p < __setup_end; p++) {
 		if ((p->early && parameq(param, p->str)) ||
-		    (strcmp(param, "console") == 0 &&
-		     strcmp(p->str, "earlycon") == 0)
+			(strcmp(param, "console") == 0 &&
+			strcmp(p->str, "earlycon") == 0)
 		) {
 			set_memsize_reserved_name(p->str);
 			if (p->setup_func(val) != 0)
@@ -469,12 +468,12 @@ static int __init do_early_param(char *param, char *val,
 	/* We accept everything at this stage. */
 	unset_memsize_reserved_name();
 
-#ifdef CONFIG_KDP_NS
+	#ifdef CONFIG_KDP_NS
 	if ((strncmp(param, "bootmode", 9) == 0)) {
 		if ((strncmp(val, "2", 2) == 0))
 			__is_kdp_recovery = 1;
 	}
-#endif
+	#endif
 
 	return 0;
 }
@@ -482,7 +481,7 @@ static int __init do_early_param(char *param, char *val,
 void __init parse_early_options(char *cmdline)
 {
 	parse_args("early options", cmdline, NULL, 0, 0, 0, NULL,
-		   do_early_param);
+			   do_early_param);
 }
 
 /* Arch code calls this early on, or if not, just before other parsing. */
@@ -529,8 +528,8 @@ static void __init report_meminit(void)
 		stack = "off";
 
 	pr_info("mem auto-init: stack:%s, heap alloc:%s, heap free:%s\n",
-		stack, want_init_on_alloc(GFP_KERNEL) ? "on" : "off",
-		want_init_on_free() ? "on" : "off");
+			stack, want_init_on_alloc(GFP_KERNEL) ? "on" : "off",
+			want_init_on_free() ? "on" : "off");
 	if (want_init_on_free())
 		pr_info("mem auto-init: clearing system memory may take some time...\n");
 }
@@ -581,9 +580,9 @@ asmlinkage __visible void __init start_kernel(void)
 	boot_cpu_init();
 	page_address_init();
 	pr_notice("%s", linux_banner);
-#ifdef CONFIG_RKP
+	#ifdef CONFIG_RKP
 	rkp_robuffer_init();
-#endif
+	#endif
 	setup_arch(&command_line);
 	mm_init_cpumask(&init_mm);
 	setup_command_line(command_line);
@@ -595,36 +594,36 @@ asmlinkage __visible void __init start_kernel(void)
 	build_all_zonelists(NULL);
 	page_alloc_init();
 
-#if !defined(CONFIG_SAMSUNG_PRODUCT_SHIP)
+	#if !defined(CONFIG_SAMSUNG_PRODUCT_SHIP)
 	pr_notice("Kernel command line: %s\n", boot_command_line);
-#endif
+	#endif
 	/* parameters may set static keys */
 	jump_label_init();
 	parse_early_param();
 	after_dashes = parse_args("Booting kernel",
-				  static_command_line, __start___param,
-				  __stop___param - __start___param,
-				  -1, -1, NULL, &unknown_bootoption);
+							  static_command_line, __start___param,
+						   __stop___param - __start___param,
+						   -1, -1, NULL, &unknown_bootoption);
 	if (!IS_ERR_OR_NULL(after_dashes))
 		parse_args("Setting init args", after_dashes, NULL, 0, -1, -1,
-			   NULL, set_init_arg);
+				   NULL, set_init_arg);
 
-	/*
-	 * These use large bootmem allocations and must precede
-	 * kmem_cache_init()
-	 */
-	setup_log_buf(0);
+		/*
+		 * These use large bootmem allocations and must precede
+		 * kmem_cache_init()
+		 */
+		setup_log_buf(0);
 	pidhash_init();
 	vfs_caches_init_early();
 	sort_main_extable();
 	trap_init();
 	mm_init();
-#ifdef CONFIG_RKP
+	#ifdef CONFIG_RKP
 	rkp_init();
-#endif
-#ifdef CONFIG_KDP
+	#endif
+	#ifdef CONFIG_KDP
 	kdp_enable = 1;
-#endif
+	#endif
 
 	ftrace_init();
 
@@ -643,7 +642,7 @@ asmlinkage __visible void __init start_kernel(void)
 	 */
 	preempt_disable();
 	if (WARN(!irqs_disabled(),
-		 "Interrupts were enabled *very* early, fixing it\n"))
+		"Interrupts were enabled *very* early, fixing it\n"))
 		local_irq_disable();
 	radix_tree_init();
 
@@ -700,9 +699,9 @@ asmlinkage __visible void __init start_kernel(void)
 	console_init();
 	if (panic_later)
 		panic("Too many boot %s vars at `%s'", panic_later,
-		      panic_param);
+			  panic_param);
 
-	lockdep_info();
+		lockdep_info();
 
 	/*
 	 * Need to run this when irqs are enabled, because it wants
@@ -711,16 +710,16 @@ asmlinkage __visible void __init start_kernel(void)
 	 */
 	locking_selftest();
 
-#ifdef CONFIG_BLK_DEV_INITRD
+	#ifdef CONFIG_BLK_DEV_INITRD
 	if (initrd_start && !initrd_below_start_ok &&
-	    page_to_pfn(virt_to_page((void *)initrd_start)) < min_low_pfn) {
+		page_to_pfn(virt_to_page((void *)initrd_start)) < min_low_pfn) {
 		pr_crit("initrd overwritten (0x%08lx < 0x%08lx) - disabling it.\n",
-		    page_to_pfn(virt_to_page((void *)initrd_start)),
-		    min_low_pfn);
+				page_to_pfn(virt_to_page((void *)initrd_start)),
+				min_low_pfn);
 		initrd_start = 0;
-	}
-#endif
-	kmemleak_init();
+		}
+		#endif
+		kmemleak_init();
 	debug_objects_mem_init();
 	setup_per_cpu_pageset();
 	numa_policy_init();
@@ -733,15 +732,15 @@ asmlinkage __visible void __init start_kernel(void)
 	pid_idr_init();
 	anon_vma_init();
 	acpi_early_init();
-#ifdef CONFIG_X86
+	#ifdef CONFIG_X86
 	if (efi_enabled(EFI_RUNTIME_SERVICES))
 		efi_enter_virtual_mode();
-#endif
+	#endif
 	thread_stack_cache_init();
-#ifdef CONFIG_KDP
+	#ifdef CONFIG_KDP
 	if (kdp_enable)
 		kdp_init();
-#endif
+	#endif
 	cred_init();
 	fork_init();
 	proc_caches_init();
@@ -777,12 +776,12 @@ asmlinkage __visible void __init start_kernel(void)
 /* Call all constructor functions linked into the kernel. */
 static void __init do_ctors(void)
 {
-#ifdef CONFIG_CONSTRUCTORS
+	#ifdef CONFIG_CONSTRUCTORS
 	ctor_fn_t *fn = (ctor_fn_t *) __ctors_start;
 
 	for (; fn < (ctor_fn_t *) __ctors_end; fn++)
 		(*fn)();
-#endif
+	#endif
 }
 
 bool initcall_debug;
@@ -870,7 +869,7 @@ static int __init_or_module do_one_initcall_debug(initcall_t fn)
 	delta = ktime_sub(rettime, calltime);
 	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
 	printk(KERN_DEBUG "initcall %pF returned %d after %lld usecs\n",
-		 fn, ret, duration);
+		   fn, ret, duration);
 
 	return ret;
 }
@@ -949,14 +948,14 @@ static void __init do_initcall_level(int level)
 
 	strcpy(initcall_command_line, saved_command_line);
 	parse_args(initcall_level_names[level],
-		   initcall_command_line, __start___param,
-		   __stop___param - __start___param,
-		   level, level,
-		   NULL, &repair_env_string);
+			   initcall_command_line, __start___param,
+			__stop___param - __start___param,
+			level, level,
+			NULL, &repair_env_string);
 
 	trace_initcall_level(initcall_level_names[level]);
 	for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
-		                do_one_initcall(initcall_from_entry(fn));
+		do_one_initcall(initcall_from_entry(fn));
 }
 
 static void __init do_initcalls(void)
@@ -1009,8 +1008,8 @@ static int run_init_process(const char *init_filename)
 {
 	argv_init[0] = init_filename;
 	return do_execve(getname_kernel(init_filename),
-		(const char __user *const __user *)argv_init,
-		(const char __user *const __user *)envp_init);
+					 (const char __user *const __user *)argv_init,
+					 (const char __user *const __user *)envp_init);
 }
 
 static int try_to_run_init_process(const char *init_filename)
@@ -1021,7 +1020,7 @@ static int try_to_run_init_process(const char *init_filename)
 
 	if (ret && ret != -ENOENT) {
 		pr_err("Starting init: %s exists but couldn't execute it (error %d)\n",
-		       init_filename, ret);
+			   init_filename, ret);
 	}
 
 	return ret;
@@ -1072,7 +1071,7 @@ static int __ref kernel_init(void *unused)
 	int ret;
 
 	kernel_init_freeable();
-#ifdef CONFIG_SEC_GPIO_DVS
+	#ifdef CONFIG_SEC_GPIO_DVS
 	/************************ Caution !!! ****************************/
 	/* This function must be located in appropriate INIT position
 	 * in accordance with the specification of each BB vendor.
@@ -1080,7 +1079,7 @@ static int __ref kernel_init(void *unused)
 	/************************ Caution !!! ****************************/
 	pr_info("%s: GPIO DVS: check init gpio\n", __func__);
 	gpio_dvs_check_initgpio();
-#endif /* CONFIG_SEC_GPIO_DVS */
+	#endif /* CONFIG_SEC_GPIO_DVS */
 	/* need to finish all async __init code before freeing the memory */
 	async_synchronize_full();
 	ftrace_free_init_mem();
@@ -1094,13 +1093,13 @@ static int __ref kernel_init(void *unused)
 	if (ramdisk_execute_command) {
 		ret = run_init_process(ramdisk_execute_command);
 		if (!ret) {
-#ifdef CONFIG_RKP
+			#ifdef CONFIG_RKP
 			rkp_deferred_init();
-#endif
+			#endif
 			return 0;
 		}
 		pr_err("Failed to execute %s (error %d)\n",
-		       ramdisk_execute_command, ret);
+			   ramdisk_execute_command, ret);
 	}
 
 	/*
@@ -1114,16 +1113,16 @@ static int __ref kernel_init(void *unused)
 		if (!ret)
 			return 0;
 		panic("Requested init %s failed (error %d).",
-		      execute_command, ret);
+			  execute_command, ret);
 	}
 	if (!try_to_run_init_process("/sbin/init") ||
-	    !try_to_run_init_process("/etc/init") ||
-	    !try_to_run_init_process("/bin/init") ||
-	    !try_to_run_init_process("/bin/sh"))
+		!try_to_run_init_process("/etc/init") ||
+		!try_to_run_init_process("/bin/init") ||
+		!try_to_run_init_process("/bin/sh"))
 		return 0;
 
 	panic("No working init found.  Try passing init= option to kernel. "
-	      "See Linux Documentation/admin-guide/init.rst for guidance.");
+	"See Linux Documentation/admin-guide/init.rst for guidance.");
 }
 
 static noinline void __init kernel_init_freeable(void)
@@ -1191,8 +1190,8 @@ static noinline void __init kernel_init_freeable(void)
 
 	integrity_load_keys();
 	load_default_modules();
-#ifdef CONFIG_SECURITY_DEFEX
+	#ifdef CONFIG_SECURITY_DEFEX
 	defex_load_rules();
-#endif
+	#endif
 
 }
