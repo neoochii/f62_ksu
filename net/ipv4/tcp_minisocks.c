@@ -24,9 +24,6 @@
 #include <linux/sysctl.h>
 #include <linux/workqueue.h>
 #include <linux/static_key.h>
-#ifdef CONFIG_MPTCP
-#include <net/mptcp.h>
-#endif
 #include <net/tcp.h>
 #include <net/inet_common.h>
 #include <net/xfrm.h>
@@ -545,10 +542,7 @@ struct sock *tcp_create_openreq_child(const struct sock *sk,
 			newtp->retrans_stamp = div_u64(treq->snt_synack,
 						       USEC_PER_SEC / TCP_TS_HZ);
 		}
-#ifdef CONFIG_MPTCP
-		if (ireq->saw_mpc)
-			newtp->tcp_header_len += MPTCP_SUB_LEN_DSM_ALIGN;
-#endif
+
 		newtp->tsoffset = treq->ts_off;
 #ifdef CONFIG_TCP_MD5SIG
 		newtp->md5sig_info = NULL;	/*XXX*/

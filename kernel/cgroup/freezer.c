@@ -238,6 +238,7 @@ void cgroup_freezer_migrate_task(struct task_struct *task,
 		return;
 
 	/*
+
 	 * Adjust counters of freezing and frozen tasks.
 	 * Note, that if the task is frozen, but the destination cgroup is not
 	 * frozen, we bump both counters to keep them balanced.

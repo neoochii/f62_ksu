@@ -1058,10 +1058,8 @@ u16 tcp_v6_get_syncookie(struct sock *sk, struct ipv6hdr *iph,
 	return mss;
 }
 
-#ifndef CONFIG_MPTCP
-static
-#endif
-int tcp_v6_conn_request(struct sock *sk, struct sk_buff *skb)
+
+static int tcp_v6_conn_request(struct sock *sk, struct sk_buff *skb)
 {
 	if (skb->protocol == htons(ETH_P_IP))
 		return tcp_v4_conn_request(sk, skb);

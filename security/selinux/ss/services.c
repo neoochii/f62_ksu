@@ -51,12 +51,6 @@
 #include <linux/mutex.h>
 #include <linux/flex_array.h>
 #include <linux/vmalloc.h>
-#ifdef CONFIG_UH
-#include <linux/uh.h>
-#ifdef CONFIG_KDP
-#include <linux/rkp.h>
-#endif
-#endif
 #include <net/netlabel.h>
 
 #include "flask.h"
@@ -87,13 +81,7 @@ const char *selinux_policycap_names[__POLICYDB_CAPABILITY_MAX] = {
 
 static struct selinux_ss selinux_ss;
 
-// [ SEC_SELINUX_PORTING_COMMON
-#if (defined CONFIG_KDP && defined CONFIG_SAMSUNG_PRODUCT_SHIP)
-int ss_initialized __kdp_ro;
-#else
-int ss_initialized;
-#endif
-// [ SEC_SELINUX_PORTING_COMMON
+
 
 void selinux_ss_init(struct selinux_ss **ss)
 {
@@ -764,11 +752,9 @@ out:
 	kfree(t);
 
 // [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-    	selinux_enforcing = 1;
-#endif
-	
-	if (!selinux_enforcing) // SEC_SELINUX_PORTING_COMMON Change to use RKP 
+	if (!enforcing_enabled(state))
+
+
 		return 0;
 // ] SEC_SELINUX_PORTING_COMMON
 	return -EPERM;
@@ -787,6 +773,8 @@ static int security_compute_validatetrans(struct selinux_state *state,
 	struct constraint_node *constraint;
 	u16 tclass;
 	int rc = 0;
+
+
 
 
 	if (!selinux_initialized(state))
@@ -1676,10 +1664,8 @@ out:
 	kfree(t);
 	kfree(n);
 // [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-	selinux_enforcing = 1;
-#endif
-	if (!selinux_enforcing) // SEC_SELINUX_PORTING_COMMON Change to use RKP 
+	if (!enforcing_enabled(state))
+
             return 0;
 // ] SEC_SELINUX_PORTING_COMMON
 	return -EACCES;
@@ -1731,6 +1717,7 @@ static int security_compute_sid(struct selinux_state *state,
 	u16 tclass;
 	int rc = 0;
 	bool sock;
+
 
 	if (!selinux_initialized(state)) {
 		switch (orig_tclass) {
@@ -1979,10 +1966,7 @@ static inline int convert_context_handle_invalid_context(
 	u32 len;
 
 // [ SEC_SELINUX_PORTING_COMMON 
-	#ifdef CONFIG_ALWAYS_ENFORCE
-	    selinux_enforcing = 1;
-	#endif
-	if (!selinux_enforcing) // SEC_SELINUX_PORTING_COMMON Change to use RKP
+	if (enforcing_enabled(state))
 		return -EINVAL;
 // ] SEC_SELINUX_PORTING_COMMON
 
@@ -2889,6 +2873,7 @@ int security_get_bools(struct selinux_state *state,
 {
 	struct policydb *policydb;
 	int i, rc;
+
 
 	if (!selinux_initialized(state)) {
 		*len = 0;

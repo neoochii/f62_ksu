@@ -88,10 +88,10 @@
 #define AUDIT_INITIALIZED	1
 static int	audit_initialized;
 
-// [ SEC_SELINUX_PORTING_COMMON
-u32		audit_enabled = AUDIT_ON;
-u32		audit_ever_enabled = !!AUDIT_ON;
-// ] SEC_SELINUX_PORTING_COMMON
+
+
+u32		audit_enabled = AUDIT_OFF;
+u32		audit_ever_enabled = !!AUDIT_OFF;
 
 EXPORT_SYMBOL_GPL(audit_enabled);
 

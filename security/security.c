@@ -32,6 +32,8 @@
 #include <linux/string.h>
 #include <linux/msg.h>
 #include <net/flow.h>
+#include <linux/task_integrity.h>
+
 
 #define MAX_LSM_EVM_XATTR	2
 
@@ -643,8 +645,8 @@ static void __init lsm_early_task(struct task_struct *task)
 	do {							\
 		struct security_hook_list *P;			\
 								\
-		if(security_integrity_current()) break;	\
-		hlist_for_each_entry(P, &security_hook_heads.FUNC, list)	\
+
+		hlist_for_each_entry(P, &security_hook_heads.FUNC, list) \
 			P->hook.FUNC(__VA_ARGS__);		\
 	} while (0)
 
@@ -653,9 +655,7 @@ static void __init lsm_early_task(struct task_struct *task)
 	do {							\
 		struct security_hook_list *P;			\
 								\
-		RC = security_integrity_current();		\
-		if (RC != 0)							\
-			break;								\
+
 		hlist_for_each_entry(P, &security_hook_heads.FUNC, list) { \
 			RC = P->hook.FUNC(__VA_ARGS__);		\
 			if (RC != 0)				\
@@ -1521,7 +1521,9 @@ int security_task_alloc(struct task_struct *task, unsigned long clone_flags)
 void security_task_free(struct task_struct *task)
 {
 	call_void_hook(task_free, task);
-	five_task_free(task);
+
+
+
 	kfree(task->security);
 	task->security = NULL;
 }

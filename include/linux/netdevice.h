@@ -2005,9 +2005,7 @@ struct net_device {
 
 	/* protected by rtnl_lock */
 	struct bpf_xdp_entity	xdp_state[__MAX_XDP_MODE];
-#ifdef CONFIG_NETPM
-	bool netpm_use;
-#endif
+
 };
 #define to_net_dev(d) container_of(d, struct net_device, dev)
 

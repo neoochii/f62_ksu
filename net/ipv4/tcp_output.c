@@ -717,10 +717,6 @@ static void tcp_options_write(__be32 *ptr, struct tcp_sock *tp,
 	}
 
 
-#ifdef CONFIG_MPTCP
-	if (unlikely(OPTION_MPTCP & opts->options))
-		mptcp_options_write(ptr, tp, opts, skb);
-#endif
 	smc_options_write(ptr, &options);
 }
 
@@ -890,11 +886,6 @@ static unsigned int tcp_synack_options(const struct sock *sk,
 		}
 	}
 
-
-#ifdef CONFIG_MPTCP
-	if (ireq->saw_mpc)
-		mptcp_synack_options(req, opts, &remaining);
-#endif
 
 	smc_set_option_cond(tcp_sk(sk), ireq, opts, &remaining);
 
@@ -2474,16 +2465,8 @@ static bool tcp_small_queue_check(struct sock *sk, const struct sk_buff *skb,
 
 
 	limit = max(2 * skb->truesize, sk->sk_pacing_rate >> sk->sk_pacing_shift);
-	if (factor > 0) {
-		limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
-		limit <<= factor;
-	} else {
-		/* FIXME: P170118-06256/P171122-01021/P171122-00262
-		 * Disable TSQ to avoid TSQ full and UL TP degression in
-		 * bad network condition
-		 */
-		limit = max_t(u32, limit, 4194304);
-	}
+	limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
+	limit <<= factor;
 
 	if (refcount_read(&sk->sk_wmem_alloc) > limit) {
 		/* Always send the 1st or 2nd skb in write queue.

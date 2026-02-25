@@ -95,21 +95,9 @@
 #include <asm/cacheflush.h>
 
 
+
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
-
-#ifdef CONFIG_SEC_EXT
-#include <linux/sec_ext.h>
-#endif
-
-#ifdef CONFIG_KDP
-#include <linux/kdp.h>
-#endif
-
-#ifdef CONFIG_SECURITY_DEFEX
-#include <linux/defex.h>
-void __init __weak defex_load_rules(void) { }
-#endif
 
 static int kernel_init(void *);
 
@@ -968,12 +956,7 @@ static void __init do_initcall_level(int level)
 
 	trace_initcall_level(initcall_level_names[level]);
 	for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
-
-		do_one_initcall(initcall_from_entry(fn));
-
-#ifdef CONFIG_SEC_BOOTSTAT
-	sec_bootstat_add_initcall(initcall_level_names[level]);
-#endif
+		                do_one_initcall(initcall_from_entry(fn));
 }
 
 static void __init do_initcalls(void)

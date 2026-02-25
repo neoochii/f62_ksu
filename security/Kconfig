@@ -231,6 +231,7 @@ source security/samsung/five/Kconfig
 source security/proca/Kconfig
 source security/samsung/defex_lsm/Kconfig
 
+
 choice
 	prompt "First legacy 'major LSM' to be initialized"
 	default DEFAULT_SECURITY_SELINUX if SECURITY_SELINUX

@@ -15,10 +15,7 @@
 #include <asm/pgtable.h>
 #include <linux/uaccess.h>
 
-#ifdef CONFIG_FIVE
-static struct task_integrity init_integrity =
-					INIT_TASK_INTEGRITY(init_integrity);
-#endif
+
 
 static struct signal_struct init_signals = {
 	.nr_threads	= 1,

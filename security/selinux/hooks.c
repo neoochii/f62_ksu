@@ -88,9 +88,6 @@
 #include <linux/kernfs.h>
 #include <linux/stringhash.h>	/* for hashlen_string() */
 
-// [ SEC_SELINUX_PORTING_COMMON
-#include <linux/delay.h>
-// ] SEC_SELINUX_PORTING_COMMON
 
 #include "avc.h"
 #include "objsec.h"
@@ -108,9 +105,7 @@ struct selinux_state selinux_state;
 /* SECMARK reference count */
 static atomic_t selinux_secmark_refcount = ATOMIC_INIT(0);
 
-// [ SEC_SELINUX_PORTING_COMMON
-static DEFINE_MUTEX(selinux_sdcardfs_lock);
-// ] SEC_SELINUX_PORTING_COMMON
+
 
 #ifdef CONFIG_SECURITY_SELINUX_DEVELOP
 
@@ -119,19 +114,9 @@ static int selinux_enforcing_boot __initdata;
 static int __init enforcing_setup(char *str)
 {
 	unsigned long enforcing;
-	if (!kstrtoul(str, 0, &enforcing)){
-// [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-		selinux_enforcing_boot = 1;
-		selinux_enforcing = 1;
-#else
+	if (!kstrtoul(str, 0, &enforcing))
 		selinux_enforcing_boot = enforcing ? 1 : 0;
-		selinux_enforcing = enforcing ? 1 : 0;
-#endif
-// ] SEC_SELINUX_PORTING_COMMON	
-	}
 	return 1;
-	
 }
 __setup("enforcing=", enforcing_setup);
 #else
@@ -329,12 +314,10 @@ static struct inode_security_struct *backing_inode_security(struct dentry *dentr
 	__inode_security_revalidate(inode, dentry, true);
 	return selinux_inode(inode);
 
-}
 
 static void inode_free_security(struct inode *inode)
 {
 	struct inode_security_struct *isec = selinux_inode(inode);
-
 	struct superblock_security_struct *sbsec;
 
 	if (!isec)
@@ -682,6 +665,7 @@ static int selinux_set_mnt_opts(struct super_block *sb,
 
 	mutex_lock(&sbsec->lock);
 
+
 	if (!selinux_initialized(&selinux_state)) {
 		if (!num_opts) {
 			/* Defer initialization until selinux_complete_init,
@@ -796,7 +780,7 @@ static int selinux_set_mnt_opts(struct super_block *sb,
 	if (!strcmp(sb->s_type->name, "debugfs") ||
 	    !strcmp(sb->s_type->name, "tracefs") ||
 	    !strcmp(sb->s_type->name, "pstore") ||
-
+l
 	    !strcmp(sb->s_type->name, "binder") ||
 	    !strcmp(sb->s_type->name, "bpf"))
 		sbsec->flags |= SE_SBGENFS;
@@ -2920,15 +2904,12 @@ out_err:
 		return 0;
 	
 	// [ SEC_SELINUX_PORTING_COMMON
-	if((strcmp(sb->s_type->name,"sdcardfs")) == 0)
-		mutex_lock(&selinux_sdcardfs_lock);
 
 	ad.type = LSM_AUDIT_DATA_DENTRY;
 	ad.u.dentry = sb->s_root;
 	rc = superblock_has_perm(cred, sb, FILESYSTEM__MOUNT, &ad);
 
-	if((strcmp(sb->s_type->name,"sdcardfs")) == 0)
-		mutex_unlock(&selinux_sdcardfs_lock);
+
 	// ] SEC_SELINUX_PORTING_COMMON
 	
 	return rc;
@@ -3059,6 +3040,7 @@ static int selinux_inode_init_security(struct inode *inode, struct inode *dir,
 		isec->sid = newsid;
 		isec->initialized = LABEL_INITIALIZED;
 	}
+
 
 	if (!selinux_initialized(&selinux_state) ||
 	    !(sbsec->flags & SBLABEL_MNT))
@@ -6762,7 +6744,7 @@ struct lsm_blob_sizes selinux_blob_sizes __lsm_ro_after_init = {
  * when disabling SELinux at runtime.
  */
 static struct security_hook_list selinux_hooks[] __lsm_ro_after_init = {
-#endif
+
 	LSM_HOOK_INIT(binder_set_context_mgr, selinux_binder_set_context_mgr),
 	LSM_HOOK_INIT(binder_transaction, selinux_binder_transaction),
 	LSM_HOOK_INIT(binder_transfer_binder, selinux_binder_transfer_binder),
