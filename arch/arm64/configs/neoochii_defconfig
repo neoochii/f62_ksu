@@ -7,11 +7,6 @@
 CONFIG_KSU=y
 
 
-#Susfs
-CONFIG_KSU_SUSFS=y
-
-
-
 
 
 
