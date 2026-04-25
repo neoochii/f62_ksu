@@ -89,6 +89,11 @@ build() {
     
     make ${ARGS} menuconfig || true
     make ${ARGS} || exit 1
+build(){Add commentMore actions
+    export KSU_STATUS="ksu"
+    make ${ARGS} neoochii_defconfig common.config ksu.config
+    make ${ARGS} menuconfig
+    make ${ARGS}
 }
 
 build
