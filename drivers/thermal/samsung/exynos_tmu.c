@@ -1570,6 +1570,33 @@ static int exynos_tmu_parse_ect(struct exynos_tmu_data *data)
 struct exynos_tmu_data *gpu_thermal_data;
 #endif
 
+#if defined(CONFIG_ECT)
+static void exynos_tmu_dts_override_trip_temps(struct exynos_tmu_data *data)
+{
+	struct thermal_zone_device *tz = data->tzd;
+	struct __thermal_zone *__tz;
+	int i;
+	u32 temp;
+
+	if (!tz)
+		return;
+
+	__tz = (struct __thermal_zone *)tz->devdata;
+	if (!__tz || !__tz->trips)
+		return;
+
+	for (i = 0; i < __tz->ntrips; i++) {
+		if (!__tz->trips[i].np)
+			continue;
+		if (!of_property_read_u32(__tz->trips[i].np, "temperature", &temp)) {
+			pr_info("%s: DTS override trip[%d]: %d -> %d mC\n",
+					__func__, i, __tz->trips[i].temperature, (int)temp);
+			__tz->trips[i].temperature = (int)temp;
+		}
+	}
+}
+#endif
+
 static int exynos_tmu_probe(struct platform_device *pdev)
 {
 	struct exynos_tmu_data *data;
@@ -1615,6 +1642,7 @@ static int exynos_tmu_probe(struct platform_device *pdev)
 
 #if defined(CONFIG_ECT)
 	exynos_tmu_parse_ect(data);
+	exynos_tmu_dts_override_trip_temps(data);
 #endif
 
 	data->num_probe = (readl(data->base + EXYNOS_TMU_REG_CONTROL1) >> EXYNOS_TMU_NUM_PROBE_SHIFT)
