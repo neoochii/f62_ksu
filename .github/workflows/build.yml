@@ -83,8 +83,7 @@ jobs:
         run: |
           curl -s -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
                -F document=@./kernel_enforcing \
-               -F caption="✅ Enforcing Kernel (${{ steps.enforcing.outputs.size }})
-Build #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
+               -F caption="✅ Enforcing Kernel (${{ steps.enforcing.outputs.size }})\nBuild #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
                https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
 
       - name: Send Permissive Kernel to Telegram
@@ -92,8 +91,7 @@ Build #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
         run: |
           curl -s -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
                -F document=@./kernel_permissive \
-               -F caption="✅ Permissive Kernel (${{ steps.permissive.outputs.size }})
-Build #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
+               -F caption="✅ Permissive Kernel (${{ steps.permissive.outputs.size }})\nBuild #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
                https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
 
       - name: Send Failure Alert to Telegram
