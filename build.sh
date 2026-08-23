@@ -7,6 +7,11 @@ export ANDROID_MAJOR_VERSION=t
 MODEL="GalaxyF62"
 BUILD_KERNEL_VERSION="V6.1"
 
+curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+
+
+git submodule update --init --recursive --remote
+
 # Check for debug flag
 DEBUG_BUILD=false
 while [[ "$#" -gt 0 ]]; do
