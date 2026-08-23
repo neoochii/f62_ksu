@@ -1,51 +1,121 @@
-name: Kernel Build (Fifteen Branch)
+name: Build Kernels & Send to Telegram
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - 15
-
-permissions:
-  contents: write   # ✅ Needed to create releases with GITHUB_TOKEN
+      - 16
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-kernels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout source
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          submodules: true
+          fetch-depth: 1
 
-      - name: Set up environment
+      - name: Set Up Build Environment
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y \
-            build-essential bc bison flex git curl \
-            zip unzip cpio python3 python3-pip \
-            libncurses5-dev libssl-dev wget \
-            libelf-dev fakeroot
+            build-essential \
+            libncurses-dev \
+            bison \
+            flex \
+            libssl-dev \
+            libelf-dev \
+            bc \
+            pahole \
+            pkg-config \
+            libzstd-dev
 
-      - name: Run build script
+      - name: Build Enforcing Kernel
+        id: enforcing
         run: |
-          chmod +x ./build.sh
-          ./build.sh
+          set +e
+          echo "=== Building ENFORCING kernel ==="
+          ./build.sh 2>&1 | tee enforcing_build.log
+          BUILD_EXIT=${PIPESTATUS[0]}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.sha }}   # Release tagged with commit SHA
-          name: "Kernel Build - ${{ github.sha }}"
-          body: |
-            Automated kernel build from branch **fifteen**
-            Commit: ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if [ $BUILD_EXIT -eq 0 ]; then
+            KERNEL_PATH=$(find . -type f \( -name "Image*" -o -name "bzImage" -o -name "*enforcing*.zip" \) 2>/dev/null | head -1)
+            if [ -n "$KERNEL_PATH" ] && [ -f "$KERNEL_PATH" ]; then
+              cp "$KERNEL_PATH" ./kernel_enforcing
+              SIZE=$(du -h ./kernel_enforcing | cut -f1)
+              echo "status=success" >> $GITHUB_OUTPUT
+              echo "size=$SIZE" >> $GITHUB_OUTPUT
+              echo "✅ Enforcing kernel found: $KERNEL_PATH ($SIZE)"
+              exit 0
+            fi
+          fi
 
-      - name: Upload build folder files to Release
-        uses: softprops/action-gh-release@v2
+          echo "status=failed" >> $GITHUB_OUTPUT
+          echo "❌ Enforcing kernel build failed or output not found"
+
+      - name: Build Permissive Kernel
+        id: permissive
+        run: |
+          set +e
+          echo "=== Building PERMISSIVE kernel ==="
+          ./build.sh -d 2>&1 | tee permissive_build.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+
+          if [ $BUILD_EXIT -eq 0 ]; then
+            KERNEL_PATH=$(find . -type f \( -name "Image*" -o -name "bzImage" -o -name "*permissive*.zip" \) 2>/dev/null | head -1)
+            if [ -n "$KERNEL_PATH" ] && [ -f "$KERNEL_PATH" ]; then
+              cp "$KERNEL_PATH" ./kernel_permissive
+              SIZE=$(du -h ./kernel_permissive | cut -f1)
+              echo "status=success" >> $GITHUB_OUTPUT
+              echo "size=$SIZE" >> $GITHUB_OUTPUT
+              echo "✅ Permissive kernel found: $KERNEL_PATH ($SIZE)"
+              exit 0
+            fi
+          fi
+
+          echo "status=failed" >> $GITHUB_OUTPUT
+          echo "❌ Permissive kernel build failed or output not found"
+
+      - name: Send Enforcing Kernel to Telegram
+        if: steps.enforcing.outputs.status == 'success'
+        run: |
+          curl -s -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F document=@./kernel_enforcing \
+               -F caption="✅ Enforcing Kernel (${{ steps.enforcing.outputs.size }})
+Build #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
+               https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
+
+      - name: Send Permissive Kernel to Telegram
+        if: steps.permissive.outputs.status == 'success'
+        run: |
+          curl -s -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F document=@./kernel_permissive \
+               -F caption="✅ Permissive Kernel (${{ steps.permissive.outputs.size }})
+Build #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
+               https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
+
+      - name: Send Failure Alert to Telegram
+        if: steps.enforcing.outputs.status == 'failed' || steps.permissive.outputs.status == 'failed'
+        run: |
+          curl -s -X POST \
+               -H 'Content-Type: application/json' \
+               -d '{
+                 "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+                 "text": "❌ Kernel build failed - Enforcing: ${{ steps.enforcing.outputs.status }}, Permissive: ${{ steps.permissive.outputs.status }}\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+               }' \
+               https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          files: build/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: kernel-build-${{ github.run_number }}
+          path: |
+            kernel_enforcing
+            kernel_permissive
+            enforcing_build.log
+            permissive_build.log
+          retention-days: 14
+          if-no-files-found: warn
