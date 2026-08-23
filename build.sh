@@ -5,7 +5,7 @@ export PLATFORM_VERSION=13
 export ARCH=arm64
 export ANDROID_MAJOR_VERSION=t
 MODEL="GalaxyF62"
-BUILD_KERNEL_VERSION="V6.0"
+BUILD_KERNEL_VERSION="V6.1"
 
 # Check for debug flag
 DEBUG_BUILD=false
