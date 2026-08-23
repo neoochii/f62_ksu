@@ -1,51 +1,142 @@
-name: Kernel Build (Fifteen Branch)
+name: Build Kernels & Send to Telegram
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - 15
-
-permissions:
-  contents: write   # ✅ Needed to create releases with GITHUB_TOKEN
+      - 16
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-kernels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout source
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          submodules: true
+          fetch-depth: 1
 
-      - name: Set up environment
+      - name: Set Up Build Environment
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y \
-            build-essential bc bison flex git curl \
-            zip unzip cpio python3 python3-pip \
-            libncurses5-dev libssl-dev wget \
-            libelf-dev fakeroot
+            build-essential \
+            libncurses-dev \
+            bison \
+            flex \
+            libssl-dev \
+            libelf-dev \
+            bc \
+            pahole \
+            pkg-config \
+            libzstd-dev
 
-      - name: Run build script
+      - name: Update Submodules
         run: |
-          chmod +x ./build.sh
-          ./build.sh
+          git submodule sync --recursive
+          git submodule update --init --recursive --remote
+          echo "✅ Submodules updated"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.sha }}   # Release tagged with commit SHA
-          name: "Kernel Build - ${{ github.sha }}"
-          body: |
-            Automated kernel build from branch **fifteen**
-            Commit: ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Enforcing Kernel
+        id: enforcing
+        run: |
+          set +e
+          echo "=== Building ENFORCING kernel ==="
 
-      - name: Upload build folder files to Release
-        uses: softprops/action-gh-release@v2
+          BEFORE_LIST=$(mktemp)
+          AFTER_LIST=$(mktemp)
+
+          find ./build -maxdepth 1 -type f -name "*.zip" -print 2>/dev/null | sort > "$BEFORE_LIST"
+          ./build.sh 2>&1 | tee enforcing_build.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          find ./build -maxdepth 1 -type f -name "*.zip" -print 2>/dev/null | sort > "$AFTER_LIST"
+
+          if [ $BUILD_EXIT -eq 0 ]; then
+            NEW_ZIP=$(comm -13 "$BEFORE_LIST" "$AFTER_LIST" | tail -n1)
+
+            # Fallback: if no "new" file detected, use newest zip by mtime
+            if [ -z "$NEW_ZIP" ]; then
+              NEW_ZIP=$(ls -1t ./build/*.zip 2>/dev/null | head -n1)
+            fi
+
+            if [ -n "$NEW_ZIP" ] && [ -f "$NEW_ZIP" ]; then
+              SIZE=$(du -h "$NEW_ZIP" | cut -f1)
+              echo "status=success" >> "$GITHUB_OUTPUT"
+              echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+              echo "file=$NEW_ZIP" >> "$GITHUB_OUTPUT"
+              echo "✅ Enforcing zip: $NEW_ZIP ($SIZE)"
+              exit 0
+            fi
+          fi
+
+          echo "status=failed" >> "$GITHUB_OUTPUT"
+          echo "❌ Enforcing build failed or zip not found"
+
+      - name: Send Enforcing Kernel to Telegram
+        if: steps.enforcing.outputs.status == 'success'
+        run: |
+          curl -sS -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F document=@"${{ steps.enforcing.outputs.file }}" \
+               -F caption="✅ Enforcing Kernel (${{ steps.enforcing.outputs.size }})%0ABuild #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
+               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument"
+
+      - name: Build Permissive Kernel
+        id: permissive
+        run: |
+          set +e
+          echo "=== Building PERMISSIVE kernel ==="
+
+          BEFORE_LIST=$(mktemp)
+          AFTER_LIST=$(mktemp)
+
+          find ./build -maxdepth 1 -type f -name "*.zip" -print 2>/dev/null | sort > "$BEFORE_LIST"
+          ./build.sh -d 2>&1 | tee permissive_build.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          find ./build -maxdepth 1 -type f -name "*.zip" -print 2>/dev/null | sort > "$AFTER_LIST"
+
+          if [ $BUILD_EXIT -eq 0 ]; then
+            NEW_ZIP=$(comm -13 "$BEFORE_LIST" "$AFTER_LIST" | tail -n1)
+
+            # Fallback: if no "new" file detected, use newest zip by mtime
+            if [ -z "$NEW_ZIP" ]; then
+              NEW_ZIP=$(ls -1t ./build/*.zip 2>/dev/null | head -n1)
+            fi
+
+            if [ -n "$NEW_ZIP" ] && [ -f "$NEW_ZIP" ]; then
+              SIZE=$(du -h "$NEW_ZIP" | cut -f1)
+              echo "status=success" >> "$GITHUB_OUTPUT"
+              echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+              echo "file=$NEW_ZIP" >> "$GITHUB_OUTPUT"
+              echo "✅ Permissive zip: $NEW_ZIP ($SIZE)"
+              exit 0
+            fi
+          fi
+
+          echo "status=failed" >> "$GITHUB_OUTPUT"
+          echo "❌ Permissive build failed or zip not found"
+
+      - name: Send Permissive Kernel to Telegram
+        if: steps.permissive.outputs.status == 'success'
+        run: |
+          curl -sS -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F document=@"${{ steps.permissive.outputs.file }}" \
+               -F caption="✅ Permissive Kernel (${{ steps.permissive.outputs.size }})%0ABuild #${{ github.run_number }} | ${{ github.ref_name }} | ${{ github.sha }}" \
+               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument"
+
+      - name: Send Failure Alert to Telegram
+        if: steps.enforcing.outputs.status == 'failed' || steps.permissive.outputs.status == 'failed'
+        run: |
+          curl -sS -X POST \
+               -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -F text="❌ Kernel build failed - Enforcing: ${{ steps.enforcing.outputs.status }}, Permissive: ${{ steps.permissive.outputs.status }}%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+
+      - name: Upload Build Artifacts (ZIP only from build/)
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          files: build/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: kernel-build-${{ github.run_number }}
+          path: build/*.zip
+          retention-days: 14
+          if-no-files-found: warn
